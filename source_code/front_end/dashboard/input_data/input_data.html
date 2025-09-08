@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Data - Carbon Footprint Tracker</title>
+    <link rel="stylesheet" href="input_data.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="heading">Daily Activity</h1>
+        <div class="tiles-container">
+            <a href="car/car_footprint.html" class="tile">
+                <h2>Car Footprint</h2>
+            </a>
+            <a href="flight/flight_footprint.html" class="tile">
+                <h2>Flight Footprint</h2>
+            </a>
+            <a href="forms/bike.html" class="tile">
+                <h2>Bike Footprint</h2>
+            </a>
+            <a href="forms/household_energy.html" class="tile">
+                <h2>Household Energy Use</h2>
+            </a>
+            <!-- <div class="tile disabled" data-message="Feature is coming soon">
+                <h2>Household Energy Use</h2>
+            </div> -->
+            <div class="tile disabled" data-message="Feature is coming soon">
+                <h2>Food Consumption</h2>
+            </div>
+            <div class="tile disabled" data-message="Feature is coming soon">
+                <h2>Shopping and Goods</h2>
+            </div>
+            <div class="tile disabled" data-message="Feature is coming soon">
+                <h2>Waste and Recycling</h2>
+            </div>
+        </div>
+        <!-- <div class="user-logs">
+            <h2>User CO2 Emission Logs</h2>
+            <div id="userLogsContainer" class="tiles-container">
+                User logs will be populated here by JavaScript
+            </div>
+        </div> -->
+    </div>
+
+    <!-- Custom Popup -->
+    <div id="featurePopup" class="popup">
+        <div class="popup-content">tml</div>
+    <script>
+        document.querySelectorAll('.tile.disabled').forEach(tile => {
+            tile.addEventListener('click', function() {
+                const message = this.getAttribute('data-message');
+                showMessagePopup(message);
+            });
+        });
+
+        function showMessagePopup(message) {
+            const popup = document.getElementById('featurePopup');
+            document.getElementById('popupMessage').textContent = message;
+            popup.style.display = 'block';
+        }
+
+        function hideMessagePopup() {
+            const popup = document.getElementById('featurePopup');
+            popup.style.display = 'none';
+        }
+
+        // Close popup when the close button is clicked
+        document.querySelector('.close-btn').addEventListener('click', function() {
+            hideMessagePopup();
+        });
+    </script>
+</body>
+</html>

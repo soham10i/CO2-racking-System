@@ -1,0 +1,95 @@
+<div class="input-category">
+    <link rel="stylesheet" type="text/css" href="../form_style.css">
+    <h2>Household Energy Use</h2>
+    <form id="household-energy-form">
+        <label for="date-time">Date and Time</label>
+        <input type="datetime-local" id="date-time" name="date_time" required>
+
+        <!-- <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required> -->
+
+        <label for="household-size">Household Size</label>
+        <input type="number" id="household-size" name="household_size" placeholder="Enter household size" required>
+
+        <label for="electricity-usage">Electricity Usage (kWh)</label>
+        <input type="number" id="electricity-usage" name="electricity_kwh" placeholder="Enter value" value="0.3937" required>
+
+        <label for="electricity-factor">Electricity Emission Factor (kg CO2/kWh)</label>
+        <input type="number" step="0.0001" id="electricity-factor" name="electricity_factor" placeholder="Enter value" required>
+
+        <label for="natural-gas-usage">Natural Gas Usage (liters)</label>
+        <input type="number" id="natural-gas-usage" name="natural_gas_kwh" placeholder="Enter value" required>
+
+        <label for="heating-oil-usage">Heating Oil Usage (liters)</label>
+        <input type="number" id="heating-oil-usage" name="heating_oil_litres" placeholder="Enter value" required>
+
+        <label for="coal-bags">Coal Usage (kg)</label>
+        <input type="number" id="coal-bags" name="coal_bags" placeholder="Enter value" required>
+
+        <label for="lpg-usage">LPG Usage (liters)</label>
+        <input type="number" id="lpg-usage" name="lpg_litres" placeholder="Enter value" required>
+
+        <label for="propane-usage">Propane Usage (liters)</label>
+        <input type="number" id="propane-usage" name="propane_litres" placeholder="Enter value" required>
+
+        <label for="wooden-pellets-usage">Wooden Pellets Usage (metric tons)</label>
+        <input type="number" step="0.01" id="wooden-pellets-usage" name="wooden_pellets_metric_tons" placeholder="Enter value" required>
+
+        <button type="submit" class="submit-btn">Submit</button>
+    </form>
+</div>
+
+<!-- Pop-up Modal -->
+<div id="popup-modal" class="modal">
+    <div class="modal-content">
+        <span id="popup-message"></span>
+        <button id="popup-ok-btn" class="submit-btn">OK</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const email = localStorage.getItem('email');
+    if (email) {
+        document.getElementById('email').value = email;
+    }
+});
+
+document.getElementById('household-energy-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const formData = {
+        email: document.getElementById('email').value,
+        householdSize: document.getElementById('household-size').value,
+        electricityKwh: document.getElementById('electricity-usage').value,
+        electricityFactor: document.getElementById('electricity-factor').value,
+        naturalGasKwh: document.getElementById('natural-gas-usage').value,
+        heatingOilLitres: document.getElementById('heating-oil-usage').value,
+        coalBags: document.getElementById('coal-bags').value,
+        lpgLitres: document.getElementById('lpg-usage').value,
+        propaneLitres: document.getElementById('propane-usage').value,
+        woodenPelletsMetricTons: document.getElementById('wooden-pellets-usage').value
+    };
+
+    fetch('http://localhost:6060/calculator/household/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('popup-message').innerText = 'Data submitted successfully! CO2 Footprint: ' + data.co2EmissionMetricTons + ' metric tons';
+        document.getElementById('popup-modal').style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+
+document.getElementById('popup-ok-btn').addEventListener('click', function() {
+    document.getElementById('popup-modal').style.display = 'none';
+    document.getElementById('household-energy-form').reset();
+});
+</script>

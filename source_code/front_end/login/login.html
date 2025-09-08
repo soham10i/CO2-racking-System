@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="loginstyle.css">
+    <link rel="stylesheet" href="popupstyle.css">
+</head>
+<body>
+<div class="main-container">
+    <div class="form-wrapper">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" placeholder="Enter your password" required minlength="8">
+            </div>
+            <button type="submit" class="primary-btn">Login</button>
+        </form>
+        <div class="alternate-action">
+            <p><a href="../login/forget_password.html">Forget your password?</a></p>
+            <p>Don't have an account? <a href="../registration/register.html">Register</a></p>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Custom Popup -->
+<div id="welcomePopup" class="popup">
+    <div class="popup-content">
+        <span class="close-btn">&times;</span>
+        <h2>Welcome to CO2 Tracker</h2>
+        <p>Login successful!</p>
+    </div>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Collect form data
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        // Validate password length
+        if (password.length < 8) {
+            alert('Password must be at least 8 characters long.');
+            return;
+        }
+
+        // Prepare the request body
+        const requestBody = {
+            email: email,
+            password: password
+        };
+
+        try {
+            // Send POST request to the login API
+            const response = await fetch('http://localhost:6060/auth/signin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.statusCode === 200) {
+                    // Show custom popup
+                    const popup = document.getElementById('welcomePopup');
+                    popup.style.display = 'block';
+                    
+                    // Store token, email, and username in localStorage
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('email', email);
+                    localStorage.setItem('userId', data.id);
+                    
+                    // Close popup after 2 seconds and redirect to dashboard
+                    setTimeout(() => {
+                        popup.style.display = 'none';
+                        window.location.href = '../dashboard/dashboard.html';
+                    }, 2000);
+                } else {
+                    alert(data.message || 'Login failed. Please try again.');
+                }
+            } else {
+                const errorData = await response.json();
+                alert(errorData.message || 'An error occurred during login.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again later.');
+        }
+    });
+
+    // Close popup when the close button is clicked
+    document.querySelector('.close-btn').addEventListener('click', function() {
+        document.getElementById('welcomePopup').style.display = 'none';
+    });
+
+    // Prevent going back to login/registration page
+    window.onpopstate = function () {
+        if (localStorage.getItem('authToken')) {
+            window.history.go(1);
+        }
+    };
+
+    // Redirect to dashboard if already logged in
+    if (localStorage.getItem('authToken')) {
+        window.location.href = '../dashboard/dashboard.html';
+    }
+</script>
+</body>
+</html>

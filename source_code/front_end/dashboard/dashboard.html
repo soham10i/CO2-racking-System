@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="dashboardstyle.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="../login/popupstyle.css">
+</head>
+<body>
+<div class="dashboard-container">
+    <!-- Top Panel -->
+    <div class="top-panel">
+        <button id="toggleSidebar" class="toggle-btn">☰</button>
+    </div>
+
+    <div class="main-dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="nav-list">
+                <!-- <li class="nav-item" data-target="user-profile-content">
+                    <a href="../dashboard/User/profile.html" target="main-content-frame">
+                        <img src="../dashboard/Image/profile.png" alt="User Icon">
+                        <span id="userProfileName"></span>
+                    </a>
+                </li> -->
+                <li class="nav-item active" data-target="dashboard-content">
+                    <a href="home.html" target="main-content-frame" id="homeLink">
+                        <img src="../dashboard/Image/home.png" alt="Calculator Icon">
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-target="calculator-content">
+                    <img src="../dashboard/Image/calculator.png" alt="Calculator Icon">
+                    <span>Calculator</span>
+                </li>
+                <li class="nav-item" data-target="input-data-content">
+                    <a href="../dashboard/input_data/input_data.html" target="main-content-frame">
+                        <img src="../dashboard/Image/events.png" alt="Daily Input Icon">
+                        <span>Daily Activity</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-target="analytics-content">
+                    <a href="../dashboard/reports/report.html" target="main-content-frame">
+                        <img src="../dashboard/Image/reports.png" alt="Reports Icon">
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-target="suggestion-content" id="suggestionNavItem">
+                    <img src="../dashboard/Image/suggestions.png" alt="Suggestions Icon">
+                    <span>Suggestion</span>
+                </li>
+                <li class="nav-item" data-target="user-profile-content">
+                    <a href="../dashboard/User/profile.html" target="main-content-frame">
+                        <img src="../dashboard/Image/profile.png" alt="User Icon">
+                        <span id="userProfileName"></span>
+                    </a>
+                </li>
+                <li class="nav-item" id="logoutNavItem">
+                    <img src="../dashboard/Image/logout.png" alt="Logout Icon">
+                    <span>Logout</span>
+                </li>
+            </ul>
+            <div class="logo">
+                <img src="logo.png" alt="CO2 Tracker Logo" style="height: 300px;">
+            </div>
+        </aside>
+ 
+        <!-- Main Content -->
+        <div class="main-content">
+            <section id="content-container">
+                <div id="user-profile-content" class="content">
+                    <iframe width="100%" height="1000" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"
+                        src="../dashboard/User/profile.html" style="display: block; margin: 0 auto;"></iframe>
+                </div>
+                <div id="dashboard-content" class="content active">
+                    <!--  -->
+                </div>
+                <div id="calculator-content" class="content">
+                    <iframe width="100%" height="1000" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"
+                        src="https://calculator.carbonfootprint.com/calculator.aspx" style="display: block; margin: 0 auto;"></iframe>
+                </div>
+                <iframe id="main-content-frame" name="main-content-frame" class="content-frame"></iframe>
+                <div id="analytics-content" class="content">
+                    <h2>Reports</h2>
+                </div>
+                <div id="suggestion-content" class="content">
+                    <h2>Suggestions</h2>
+                </div>
+                <div id="logout-content" class="content">
+                    <h2>Logout</h2>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Confirmation Popup -->
+<div id="logoutPopup" class="popup">
+    <div class="popup-content">
+        <h2>Are you sure you want to logout?</h2>
+        <button id="confirmLogoutBtn" class="primary-btn">Yes</button>
+        <button id="cancelLogoutBtn" class="secondary-btn">No</button>
+    </div>
+</div>
+
+<!-- Thank You Popup -->
+<div id="thankYouPopup" class="popup">
+    <div class="popup-content">
+        <h2>Thank you for using CO2 Tracker</h2>
+        <p>Redirecting to login page...</p>
+    </div>
+</div>
+
+<!-- Suggestions Popup -->
+<div id="suggestionsPopup" class="popup">
+    <div class="popup-content">
+        <h2>Suggestions Feature coming soon!</h2>
+        <button id="suggestionsOkBtn" class="primary-btn">OK</button>
+    </div>
+</div>
+
+<script>
+    // Sidebar toggle functionality
+    const toggleSidebar = document.getElementById('toggleSidebar');
+    const sidebar = document.querySelector('.sidebar');
+    toggleSidebar.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+    });
+
+    // Navigation functionality
+    const navItems = document.querySelectorAll('.nav-item');
+    const contents = document.querySelectorAll('.content');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            contents.forEach(content => content.classList.remove('active'));
+            const target = item.getAttribute('data-target');
+            if (target) {
+                document.getElementById(target).classList.add('active');
+                if (target !== 'input-data-content' && target !== 'analytics-content' && target !== 'user-profile-content') {
+                    document.getElementById('main-content-frame').src = '';
+                }
+            }
+        });
+    });
+
+    // Fetch user profile details
+    const authToken = localStorage.getItem('authToken');
+    if (authToken) {
+        fetch('http://localhost:6060/user/get-profile', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            localStorage.setItem('firstName', data.firstName);
+            localStorage.setItem('lastName', data.lastName);
+            localStorage.setItem('email', data.email);
+            localStorage.setItem('address', data.address);
+            localStorage.setItem('phoneNumber', data.phoneNumber);
+            localStorage.setItem('role', data.role);
+
+            const fullName = `${data.firstName} ${data.lastName}`;
+            document.getElementById('userProfileName').textContent = fullName;
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            if (usernameDisplay) {
+                usernameDisplay.textContent = `User: ${fullName}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user profile:', error);
+        });
+    }
+
+    // Logout functionality
+    document.getElementById('logoutNavItem').addEventListener('click', function() {
+        document.getElementById('logoutPopup').style.display = 'block';
+    });
+
+    document.getElementById('cancelLogoutBtn').addEventListener('click', function() {
+        document.getElementById('logoutPopup').style.display = 'none';
+    });
+
+    document.getElementById('confirmLogoutBtn').addEventListener('click', function() {
+        document.getElementById('logoutPopup').style.display = 'none';
+        document.getElementById('thankYouPopup').style.display = 'block';
+
+        setTimeout(() => {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('username');
+            window.location.href = '../login/login.html';
+        }, 2000);
+    });
+
+    // Suggestions functionality
+    document.getElementById('suggestionNavItem').addEventListener('click', function() {
+        document.getElementById('suggestionsPopup').style.display = 'block';
+    });
+
+    document.getElementById('suggestionsOkBtn').addEventListener('click', function() {
+        document.getElementById('suggestionsPopup').style.display = 'none';
+    });
+
+    // Function to load content into the main content area
+    function loadContent(url) {
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById("main-content-frame").innerHTML = html;
+            })
+            .catch(error => console.error('Error loading content:', error));
+    }
+
+    // Load home.html by default on page load
+    window.onload = function() {
+        loadContent('home.html');
+        document.getElementById("homeLink").classList.add("active");
+    };
+
+    // Add event listeners to sidebar links
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            const url = this.getAttribute('href');
+            loadContent(url);
+
+            // Remove active class from all links and add to the clicked link
+            document.querySelectorAll('.sidebar a').forEach(link => link.classList.remove("active"));
+            this.classList.add("active");
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bike Footprint</title>
+    <link rel="stylesheet" href="../form_style.css">
+    <style>
+        .input-category {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-category h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #003366;
+        }
+
+        .input-category label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .input-category input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            background-color: #003366;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .submit-btn:hover {
+            background-color: #002d4d;
+        }
+    </style>
+</head>
+<body>
+<div class="input-category">
+    <h2>Bike Carbon Footprint</h2>
+    <form id="bike-form">
+        <label for="mileage">Mileage (km)</label>
+        <input type="number" id="mileage" name="mileage" placeholder="Enter mileage in km" required>
+
+        <label for="engine-capacity">Engine Capacity (cc)</label>
+        <input type="number" id="engine-capacity" name="engine_capacity" placeholder="Enter engine capacity in cc" required>
+
+        <label for="fuel-efficiency">Fuel Efficiency (g/km)</label>
+        <input type="number" id="fuel-efficiency" name="fuel_efficiency" placeholder="Enter fuel efficiency in g/km" required>
+
+        <button type="submit" class="submit-btn">Submit</button>
+    </form>
+</div>
+</body>
+</html>

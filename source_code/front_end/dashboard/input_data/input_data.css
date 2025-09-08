@@ -1,0 +1,136 @@
+.container {
+    max-width: 1200px; /* Increase max width for better layout */
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center; /* Center the content */
+}
+
+.tiles-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Three columns */
+    gap: 30px; /* Add spacing between tiles */
+    justify-content: center; /* Center tiles horizontally */
+    align-items: center; /* Center tiles vertically */
+}
+
+.tile {
+    background-color: #e6e6e6;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, color 0.3s ease; /* Add color transition */
+    box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.15);
+    font-size: 18px; /* Font size for the text */
+    font-family: Arial, sans-serif; /* Set font family */
+}
+
+/* .tile.disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+} */
+
+.tile:hover {
+    background-color: #b6d7ff;
+}
+
+.tile h2 {
+    font-size: 20px;
+    color: #003366;
+}
+
+h1.heading {
+    font-family: Arial, sans-serif;
+}
+
+.tile:hover {
+    background-color: #d4e4f7;
+    transform: scale(1.05);
+}
+
+.tile:active {
+    background-color: #003366; /* Switch background color */
+    color: #e6e6e6; /* Switch font color */
+}
+
+.tile:active h2 {
+    color: #e6e6e6; /* Switch font color */
+}
+
+/* Center the last tile in its own row */
+.tiles-container > .tile:nth-child(7) {
+    grid-column: span 3; /* Span all three columns */
+    justify-self: center; /* Center horizontally */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tiles-container {
+        grid-template-columns: repeat(2, 1fr); /* Two columns on smaller screens */
+    }
+
+    .tiles-container > .tile:nth-child(7) {
+        grid-column: span 2; /* Adjust for smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .tiles-container {
+        grid-template-columns: 1fr; /* Single column on extra-small screens */
+    }
+
+    .tiles-container > .tile:nth-child(7) {
+        grid-column: span 1; /* Full-width */
+    }
+}
+
+a.tile {
+    text-decoration: none;
+}
+
+/* Custom Popup Styling */
+.popup {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+h2.popup-heading {
+    font-size: 24px;
+    color: #003366;
+    margin-bottom: 20px;
+}
+

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Footprint</title>
+    <link rel="stylesheet" href="../form_style.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+        .input-category {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-category h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #003366;
+        }
+
+        .input-category label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .input-category input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            background-color: #003366;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .submit-btn:hover {
+            background-color: #002d4d;
+        }
+
+        .response-message {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: center;
+            color: green;
+        }
+
+        .error-message {
+            color: red;
+        }
+
+        /* Popup styling */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.13);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .ok-btn {
+            display: block;
+            width: 100%;
+            background-color: #003366;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .ok-btn:hover {
+            background-color: #002d4d;
+        }
+
+        .cancel-btn {
+            display: block;
+            width: 100%;
+            background-color: #cc0000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .cancel-btn:hover {
+            background-color: #990000;
+        }
+    </style>
+</head>
+<body>
+<div class="input-category">
+    <h2>Car Carbon Footprint</h2>
+    <form id="car-form">
+        <label for="mileage">Mileage (km)</label>
+        <input type="number" id="mileage" name="mileage" placeholder="Enter mileage in km" required>
+
+        <label for="car-model">Choose Vehicle</label>
+        <input type="text" id="car-model" name="car_model" placeholder="Enter vehicle model (e.g., Toyota Prius)" required>
+
+        <label for="year">Year</label>
+        <input type="number" id="year" name="year" placeholder="Enter manufacturing year" required>
+
+        <label for="fuel-efficiency">Fuel Efficiency (g/km)</label>
+        <input type="number" id="fuel-efficiency" name="fuel_efficiency" placeholder="Enter fuel efficiency in g/km" required>
+
+        <button type="submit" class="submit-btn" id="submit-btn">Submit</button>
+        <button type="button" class="cancel-btn" id="cancel-btn" style="display: none;">Cancel</button>
+    </form>
+    <div class="response-message" id="response-message"></div>
+</div>
+
+<!-- Popup for displaying CO2 value -->
+<div id="co2Popup" class="popup">
+    <div class="popup-content">
+        <h2>Calculated CO2 Footprint</h2>
+        <p id="popupMessage"></p>
+        <button class="ok-btn" id="okButton">OK</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get("id");
+        const isEdit = urlParams.get("edit") === "true";
+
+        if (isEdit && id) {
+            loadRecordForEditing(id);
+        }
+
+        document.getElementById("car-form").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            // Logged-in user email (fetch from session/JWT or hardcoded for testing)
+            const userEmail = localStorage.getItem("email");
+
+            // Collect form data
+            const mileage = document.getElementById("mileage").value;
+            const carModel = document.getElementById("car-model").value;
+            const year = document.getElementById("year").value;
+            const efficiency = document.getElementById("fuel-efficiency").value;
+
+            // Build request payload
+            const requestBody = {
+                email: userEmail,
+                transportType: "Car",
+                mileage: parseFloat(mileage),
+                carModel: carModel,
+                year: parseInt(year),
+                efficiency: parseFloat(efficiency)
+            };
+
+            const url = isEdit ? `http://localhost:6060/calculator/transportation/update/car/${id}` : "http://localhost:6060/calculator/transportation/calculate";
+            const method = "POST";
+
+            // Disable the submit button and show loading text
+            const submitButton = document.getElementById("submit-btn");
+            submitButton.disabled = true;
+            submitButton.textContent = isEdit ? "Updating..." : "Submitting...";
+
+            // Send data to the backend
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("authToken")}` // Add auth token to headers
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const responseData = await response.text(); // Response as plain text
+
+                // Handle response
+                if (response.ok) {
+                    document.getElementById("popupMessage").textContent = responseData;
+                    document.getElementById("co2Popup").style.display = 'block';
+                    resetForm();
+                } else {
+                    document.getElementById("response-message").textContent = `Error: ${responseData}`;
+                    document.getElementById("response-message").classList.add("error-message");
+                }
+            } catch (error) {
+                // Handle fetch errors
+                document.getElementById("response-message").textContent = `Error: ${error.message}`;
+                document.getElementById("response-message").classList.add("error-message");
+            } finally {
+                // Re-enable the submit button and reset text
+                submitButton.disabled = false;
+                submitButton.textContent = isEdit ? "Update" : "Submit";
+            }
+        });
+
+        document.getElementById("cancel-btn").addEventListener("click", function() {
+            window.location.href = "car_footprint.html";
+        });
+
+        document.getElementById("okButton").addEventListener("click", function() {
+            document.getElementById("co2Popup").style.display = 'none';
+            resetForm();
+        });
+
+        function resetForm() {
+            document.getElementById("car-form").reset();
+            document.getElementById("response-message").textContent = '';
+            document.getElementById("submit-btn").textContent = "Submit";
+            document.getElementById("cancel-btn").style.display = "none";
+        }
+
+        async function loadRecordForEditing(id) {
+            try {
+                const response = await fetch(`http://localhost:6060/calculator/transportation/car/${id}`, {
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("authToken")}` // Add auth token to headers
+                    }
+                });
+                const record = await response.json();
+
+                // Load data into the form
+                document.getElementById("mileage").value = record.mileage;
+                document.getElementById("car-model").value = record.carModel;
+                document.getElementById("year").value = record.year;
+                document.getElementById("fuel-efficiency").value = record.efficiency;
+
+                // Update button text and show cancel button
+                document.getElementById("submit-btn").textContent = "Update";
+                document.getElementById("cancel-btn").style.display = "block";
+            } catch (error) {
+                console.error("Error loading record for editing:", error);
+            }
+        }
+    });
+</script>
+</body>
+</html>
