@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Theme: Apple system-app look with a glass ("vibrancy") finish.
+ * - Neutrals follow Apple's system greys (label / secondaryLabel / systemGroupedBackground).
+ * - Tint colours are the accessible variants of systemGreen / systemBlue / systemRed, chosen so text
+ *   and buttons meet WCAG AA (white on primary 5.4:1, accent on glass ≥ 5:1, muted on glass ≥ 4.6:1).
+ * - Glass = translucent fill + backdrop blur/saturation + hairline border + top highlight. It falls back
+ *   to solid surfaces when the user asks for reduced transparency or forced colours.
+ */
+:root {
+  --bg: #f2f2f7;
+  --surface-solid: #ffffff;
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-shadow: rgba(0, 0, 0, 0.08);
+  --line: rgba(60, 60, 67, 0.16);
+  --field: #8a8a8e; /* input outline, ≥ 3:1 on the page */
+  --fill: rgba(118, 118, 128, 0.12);
+  --fill-strong: rgba(118, 118, 128, 0.2);
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --primary: #1d7a34;
+  --primary-ink: #ffffff;
+  --accent: #0066cc;
+  --warn: #b25000;
+  --danger: #d70015;
+  --wallpaper:
+    radial-gradient(60rem 40rem at 10% -10%, rgba(52, 199, 89, 0.22), transparent 60%),
+    radial-gradient(50rem 36rem at 95% 0%, rgba(0, 122, 255, 0.16), transparent 60%),
+    radial-gradient(48rem 40rem at 70% 110%, rgba(175, 82, 222, 0.12), transparent 60%);
+  /* Categorical chart slots, fixed order. Validated on #f5f5f7: adjacent CVD ΔE ≥ 9.1. Three slots sit
+     below 3:1 against light glass, so every chart ships a legend and a table view. */
+  --cat-transport: #2a78d6;
+  --cat-energy: #eb6834;
+  --cat-diet: #1baf7a;
+  --cat-shopping: #eda100;
+  --cat-waste: #e87ba4;
+  --chart-grid: #e5e5ea;
+  --chart-neutral: #aeaeb2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --surface-solid: #1c1c1e;
+    --glass: rgba(28, 28, 30, 0.58);
+    --glass-strong: rgba(44, 44, 46, 0.82);
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --glass-highlight: rgba(255, 255, 255, 0.08);
+    --glass-shadow: rgba(0, 0, 0, 0.5);
+    --line: rgba(84, 84, 88, 0.55);
+    --field: #8e8e93;
+    --fill: rgba(118, 118, 128, 0.24);
+    --fill-strong: rgba(118, 118, 128, 0.36);
+    --ink: #f5f5f7;
+    --muted: #98989f;
+    --primary: #30d158;
+    --primary-ink: #00210a;
+    --accent: #0a84ff;
+    --warn: #ffb340;
+    --danger: #ff6961;
+    --wallpaper:
+      radial-gradient(60rem 40rem at 10% -10%, rgba(48, 209, 88, 0.16), transparent 60%),
+      radial-gradient(50rem 36rem at 95% 0%, rgba(10, 132, 255, 0.16), transparent 60%),
+      radial-gradient(48rem 40rem at 70% 110%, rgba(191, 90, 242, 0.12), transparent 60%);
+    /* Validated on #1c1c1e: adjacent CVD ΔE ≥ 8.4, all ≥ 3:1. */
+    --cat-transport: #3987e5;
+    --cat-energy: #d95926;
+    --cat-diet: #199e70;
+    --cat-shopping: #c98500;
+    --cat-waste: #d55181;
+    --chart-grid: #2c2c2e;
+    --chart-neutral: #636366;
+  }
+}
+
+body {
+  @apply font-sans text-ink antialiased;
+  background: var(--wallpaper), var(--bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'kern';
+}
+
+@layer components {
+  /* Glass material: cards, sidebar, popovers. */
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 1px 2px var(--glass-shadow),
+      0 12px 32px var(--glass-shadow);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+  }
+  .glass-strong {
+    @apply glass;
+    background: var(--glass-strong);
+  }
+
+  /* Segmented control (UISegmentedControl / NSSegmentedControl). */
+  .segmented {
+    @apply inline-flex rounded-[10px] p-0.5;
+    background: var(--fill);
+  }
+  .segment {
+    @apply min-h-[32px] rounded-[8px] px-3 text-xs font-semibold text-muted transition;
+  }
+  .segment:hover {
+    @apply text-ink;
+  }
+  .segment[aria-pressed='true'] {
+    @apply text-ink;
+    background: var(--surface-solid);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-strong {
+    background: var(--surface-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .glass,
+  .glass-strong {
+    border: 1px solid CanvasText;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

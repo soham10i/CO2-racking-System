@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: co2-tracker-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/co2tracker}
+    username: ${DB_USER:co2tracker}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USER:}
+    password: ${MAIL_PASSWORD:}
+    # Local Mailhog needs neither; real relays (OCI Email Delivery, SES, …) need both on port 587.
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_SMTP_STARTTLS:false}
+      mail.smtp.starttls.required: ${MAIL_SMTP_STARTTLS:false}
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /api/v1/docs
+  swagger-ui:
+    enabled: false
+    path: /api/v1/docs-ui
+
+app:
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+  mail-from: ${APP_MAIL_FROM:no-reply@co2tracker.local}
+  security:
+    # Must be set (>= 32 bytes) via env in every real environment; no default on purpose.
+    jwt-secret: ${JWT_SECRET:}
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+    verification-token-ttl: 24h
+    reset-token-ttl: 30m
+    cookie-secure: ${COOKIE_SECURE:true}
+    max-failed-logins: 5
+    lockout-duration: 15m
+  # Reference footprints, t CO2e per person per year. Sources and caveats: docs/05-emission-methodology.md.
+  benchmarks:
+    references:
+      - key: de-average
+        label: Germany average
+        tonnes-per-year: 10.3
+        source: UBA CO2 calculator average (verify edition)
+      - key: world-average
+        label: World average (fossil CO2)
+        tonnes-per-year: 4.7
+        source: Global Carbon Budget 2023
+      - key: target-2030
+        label: 1.5 °C lifestyle target 2030
+        tonnes-per-year: 2.5
+        source: IGES, Aalto & D-mat (2019), 1.5-Degree Lifestyles
+      - key: target-2050
+        label: 1.5 °C lifestyle target 2050
+        tonnes-per-year: 0.7
+        source: IGES, Aalto & D-mat (2019), 1.5-Degree Lifestyles

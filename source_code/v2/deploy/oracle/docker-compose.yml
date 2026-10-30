@@ -1,0 +1,80 @@
+# Production stack for a single Oracle Cloud "Always Free" Ampere A1 VM (ARM64).
+#   Internet :80/:443 -> caddy (automatic HTTPS) -> web (nginx + SPA) -> api (Spring Boot) -> postgres
+# Only Caddy publishes ports. Postgres data lives on the VM's block volume (named volume below).
+# Run from this directory:  docker compose --env-file .env up -d --build
+name: co2tracker
+
+x-restart: &restart
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  postgres:
+    <<: *restart
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: co2tracker
+      POSTGRES_USER: co2tracker
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U co2tracker"]
+      interval: 10s
+      retries: 10
+    mem_limit: 2g
+
+  api:
+    <<: *restart
+    build: ../../backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/co2tracker
+      DB_USER: co2tracker
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (>= 32 chars)}
+      COOKIE_SECURE: "true"
+      APP_FRONTEND_URL: https://${DOMAIN:?set DOMAIN}
+      APP_MAIL_FROM: ${APP_MAIL_FROM:?set APP_MAIL_FROM}
+      MAIL_HOST: ${MAIL_HOST:?set MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60
+    mem_limit: 2g
+
+  web:
+    <<: *restart
+    build: ../../frontend
+    depends_on:
+      - api
+    mem_limit: 256m
+
+  caddy:
+    <<: *restart
+    image: caddy:2.8-alpine
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 256m
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
