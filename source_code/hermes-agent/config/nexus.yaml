@@ -1,0 +1,15 @@
+# Locked-down Hermes config for Nexus in the CO2 app: chat only.
+model:
+  provider: custom
+  base_url: ${MERCURY_BASE_URL}
+  default: ${MERCURY_MODEL}
+  api_key: ${MERCURY_API_KEY}
+# The api_server default is the full toolset (terminal, files, web). Nexus gets none.
+platform_toolsets:
+  api_server: []
+memory:
+  memory_enabled: false
+  user_profile_enabled: false
+  nudge_interval: 0
+agent:
+  max_turns: 3
