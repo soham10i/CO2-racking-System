@@ -1,6 +1,6 @@
 # 06 — Integrations: email delivery and single sign-on
 
-Status: **email works locally against Mailhog; no real provider and no SSO are configured.**
+Status: **email works locally against Mailhog; Sign in with Google is built (switched on by `GOOGLE_CLIENT_ID`); other SSO providers are not.**
 This document lists what the project owner has to supply to turn each one on, and how the code is wired to receive it.
 
 ---
@@ -46,7 +46,61 @@ This document lists what the project owner has to supply to turn each one on, an
 
 ## 2. Single sign-on (OpenID Connect)
 
-> **Deferred** (decision 2026-10-30): SSO is out of scope for now. This section is kept as the plan for when it is picked up.
+> **Google is built** (2026-11-09). Other providers still follow the plan below.
+
+### 2.0 Sign in with Google (built)
+
+Free, no Firebase and no client secret: Google's own script draws the button, hands the page a signed
+**ID token**, and the API verifies it before opening a normal session (same refresh cookie and access token
+as a password sign-in).
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant G as Google
+  participant A as API
+  B->>A: GET /auth/providers
+  A-->>B: googleClientId (or nothing: button hidden)
+  B->>G: popup sign-in (accounts.google.com/gsi)
+  G-->>B: ID token (JWT, RS256)
+  B->>A: POST /auth/google {credential}
+  A->>G: fetch signing keys (cached JWKS)
+  A-->>B: session (access token + refresh cookie)
+```
+
+**What the API checks** (`GoogleTokenVerifier`): RS256 signature against Google's published keys, `iss` is
+Google, `aud` equals our client id, not expired, and `email_verified = true`. Anything else is a 401.
+
+**Accounts** (`AuthService.loginWithGoogle`):
+
+| Situation | Result |
+|---|---|
+| Google `sub` already linked | Signs into that account |
+| No account for the email | New active account, no password, name from Google |
+| Confirmed password account with that email | Linked; the password keeps working |
+| **Unconfirmed** password account with that email | Linked, and its password and sessions are **removed**: whoever registered it never proved they own the address (account pre-hijacking) |
+| Email already linked to a *different* Google account | 403 |
+| Disabled account | 403 |
+
+Google-only accounts have no password: password sign-in fails for them, and changing the password or
+deleting the account asks them to set one first through "Forgot password".
+
+This links a confirmed account without asking for its password (the plan below suggested asking). Google
+proves control of the same mailbox our verification mail does, so the extra step adds friction without
+adding proof; revisit if non-Google providers are added.
+
+**To switch it on**
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials) create an *OAuth client ID*
+   of type **Web application**. Configure the consent screen (app name, support email; scopes `openid`,
+   `email`, `profile` only).
+2. Under **Authorized JavaScript origins** add every origin the site is served from, e.g.
+   `http://localhost:8081` locally and `https://<your-domain>` in production. No redirect URIs are needed.
+3. Put the client id in `.env` as `GOOGLE_CLIENT_ID=…apps.googleusercontent.com` and restart the API. The
+   client id is public by design; there is no secret to store.
+
+The page's Content-Security-Policy already allows Google's script, button frame and styles
+(`frontend/security-headers.conf`).
 
 ### 2.1 Recommended design
 - Use **OpenID Connect authorization-code flow with PKCE**, handled **by the backend** (`spring-boot-starter-oauth2-client`).

@@ -1,0 +1,71 @@
+# Cloud Build pipeline: lint -> test -> build -> push -> deploy (Cloud Run).
+# Run from hermes-agent/:  make deploy   (or gcloud builds submit --config cloudbuild.yaml .)
+# MERCURY_API_KEY / API_SERVER_KEY come from Secret Manager at RUNTIME; never in the image or here.
+substitutions:
+  _REGION: europe-west3
+  _AR_REPO: hermes
+  _SERVICE: hermes-agent
+  _TAG: manual
+  _RUNTIME_SA: hermes-agent-run
+  _MIN_INSTANCES: "0"
+  _MAX_INSTANCES: "2"
+  _IMAGE: ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPO}/${_SERVICE}
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamicSubstitutions: true
+# Build as the least-privilege deployer SA (set via --service-account or a trigger), e.g.
+#   projects/PROJECT/serviceAccounts/hermes-agent-deploy@PROJECT.iam.gserviceaccount.com
+steps:
+  - id: lint
+    name: python:3.13-slim-trixie
+    entrypoint: bash
+    args: ["-c", "pip install -q ruff==0.14.0 && ruff check mock tests && bash -n docker/entrypoint.sh"]
+
+  - id: test
+    # Unit-level check of the mock + smoke client wiring (no Docker-in-Docker, no real key).
+    name: python:3.13-slim-trixie
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        python mock/mock_mercury.py & sleep 1
+        python - <<'PY'
+        import json, urllib.request
+        r = urllib.request.Request("http://127.0.0.1:8000/v1/chat/completions",
+            data=json.dumps({"messages": [{"role": "user", "content": "hi"}]}).encode(),
+            headers={"Authorization": "Bearer mock-key", "Content-Type": "application/json"})
+        assert "MOCK-MERCURY-OK" in urllib.request.urlopen(r).read().decode()
+        print("mock ok")
+        PY
+
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "docker/Dockerfile", "-t", "${_IMAGE}:${_TAG}", "-t", "${_IMAGE}:latest", "."]
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "--all-tags", "${_IMAGE}"]
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_IMAGE}:${_TAG}
+      - --region=${_REGION}
+      - --service-account=${_RUNTIME_SA}@${PROJECT_ID}.iam.gserviceaccount.com
+      - --set-secrets=MERCURY_API_KEY=hermes-mercury-api-key:latest,API_SERVER_KEY=hermes-api-server-key:latest
+      - --set-env-vars=MERCURY_BASE_URL=https://api.inceptionlabs.ai/v1,MERCURY_MODEL=mercury-2
+      - --port=8080
+      - --cpu=1
+      - --memory=1Gi
+      - --concurrency=10
+      - --timeout=600
+      - --min-instances=${_MIN_INSTANCES}
+      - --max-instances=${_MAX_INSTANCES}
+      - --no-allow-unauthenticated   # see README "Access"; flip deliberately
+      - --labels=app=hermes-agent
+
+images: []

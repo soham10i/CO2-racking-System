@@ -235,10 +235,38 @@ S_{\text{year}} = \frac{365}{N} \sum_{i \in \text{window, matching}} s \cdot Q_i
 $$
 $s$ is the share swapped, $EF_{\text{alt}}$ the alternative's current factor, and $n$ the passenger divisor (only for shareable modes). Swaps: car → regional train ($s = 0.25$), combustion car → EV, short-haul flight → long-distance train, beef/lamb → vegetarian ($s = 0.5$), beef/lamb → poultry, landfill → recycling ($s = 0.5$); plus 10% less home energy ($S = 0.1 \times$ logged energy, annualised). Savings under 1 kg a year are hidden; the rest are sorted by size.
 
+**Adopted actions (commitments).** On adoption the server stores the expected saving $S_{\text{year}}$ and the user's daily rate for the action's scope (the matching trips or meals, or all home energy) over the same window, $r_0 = \frac{1}{N}\sum_{i \in \text{window, scope}} E_i$. After at least 7 days, the realised saving compares that rate with the rate since adoption ($D$ days, adoption day included):
+$$
+R_{\text{year}} = 365 \left( r_0 - \frac{1}{D} \sum_{i \in \text{since adoption, scope}} E_i \right)
+$$
+$R$ is shown next to $S$, never in place of it. It is a logged-data comparison, not a measured reduction: logging less also lowers it, and the UI says so.
+
+### 4.9 Electricity: location-based and market-based
+Following the GHG Protocol Scope 2 Guidance, the log always books electricity with the grid-average (location-based) factor, and a market-based figure is shown next to it only when the user enters their supplier's factor $f_s$ (g CO2e/kWh, from the supplier's labelling under §42 EnWG in Germany).
+$$
+E_{	ext{loc}} = \sum_i E_i, \qquad ar f_{	ext{loc}} = rac{1000\, E_{	ext{loc}}}{\sum_i q_i}, \qquad E_{	ext{mkt}} = rac{f_s \sum_i q_i}{1000}
+$$
+where $q_i$ is kWh and $E_i$ kg CO2e for each electricity entry in the period. $E_{	ext{mkt}}$ never replaces $E_{	ext{loc}}$ in totals, budgets or trends. Green-tariff claims are only as good as the supplier's certificates; the UI says so.
+
+### 4.10 Household sharing
+A shared ENERGY or WASTE entry of total quantity $Q$, logged in a household of $n$ members, books each member
+$$
+q = \operatorname{round}_{3,\ 	ext{half-even}}\!\left(rac{Q}{n}
+ight), \qquad E_{	ext{member}} = q 	imes EF
+$$
+using that member's own regional factor, so the parts can differ between members in different regions. $n$ is fixed when the entry is created; people who join later do not change past entries. Rounding means $n q$ may differ from $Q$ by at most $n 	imes 0.0005$ units.
+
+### 4.11 Factor versions
+A factor line (category, subtype, region) holds versions with half-open validity $[\,v_{	ext{from}}, v_{	ext{to}})$. Publishing version $k+1$ from date $d$ sets $v^{(k)}_{	ext{to}} = d$ and $v^{(k+1)}_{	ext{from}} = d$, so exactly one version is valid on any day. New entries use the version valid on their date. Entries that are already booked keep the factor and value they were calculated with, so history is never rewritten. The preview reports
+$$
+\Delta\% = 100\,rac{EF^{(k+1)} - EF^{(k)}}{EF^{(k)}}
+$$
+and how many existing entries are dated on or after $d$, so the admin can see the change's reach before publishing.
+
 ## 5. Uncertainty and limitations
 - Factor uncertainty dominates: food and purchases ±50% or more, fuels ±5%, grid electricity ±10% (year and method).
 - User-entered quantities (distance, meal type) carry their own error.
-- Excluded for now: well-to-tank fuel emissions, vehicle and infrastructure manufacture, aviation class multipliers, market-based electricity (green tariffs), avoided-burden credits for recycling.
+- Excluded for now: well-to-tank fuel emissions, vehicle and infrastructure manufacture, aviation class multipliers, market-based electricity in totals (shown separately only, §4.9), avoided-burden credits for recycling.
 - Rounding: values are stored to the gram, and the UI shows 0.1 kg (or 3 decimals below 0.1 kg).
 
 ## 6. References
@@ -254,3 +282,40 @@ $s$ is the share swapped, $EF_{\text{alt}}$ the alternative's current factor, an
 10. IGES, Aalto University & D-mat (2019). *1.5-Degree Lifestyles: Targets and Options for Reducing Lifestyle Carbon Footprints*. Technical Report.
 11. US EPA. *Waste Reduction Model (WARM)*, current version documentation.
 12. ISO 14040:2006 / ISO 14044:2006 (life-cycle assessment) and ISO 14067:2018 (carbon footprint of products).
+
+## 10. Verified factors (V9, 2026-11-09)
+
+Each value was read from its primary source and then re-read by an independent check. Germany-specific values are `region = 'DE'` lines and take precedence over the global fallbacks. Replaced lines were closed with `valid_to = 2026-11-09`, so activities logged before that date keep their old factor.
+
+| Line | kg CO2e / unit | Source (table / row) | Scope |
+|---|---|---|---|
+| Car petrol / diesel / hybrid / EV (DE) | 0.165 / 0.175 / 0.111 / 0.070 per pkm | UBA TREMOD 6.71B, Personenverkehr 2024 | incl. energy supply chain |
+| Bus, tram/U-Bahn, regional rail, long-distance rail (DE) | 0.090 / 0.042 / 0.044 / 0.026 per pkm | same | incl. upstream, average grid |
+| Domestic flight (DE) | 0.290 per pkm | same, "Flugzeug, Inland" | incl. upstream and non-CO2 effects (EWF 1.5) |
+| Electricity (DE) | 0.352 per kWh | UBA Climate Change 16/2026, Tabelle 3, 2025 estimate | CO2e without upstream (406 g with upstream) |
+| Natural gas | 0.183 per kWh (Hs) | UBA 16/2026 Tabelle 8: 56,352 kg/TJ, then ÷ 1.11 Hs/Hi (assumed) | combustion |
+| Heating oil | 2.650 per L | UBA 16/2026 Tabelle 8: 74,020 kg/TJ × 35.8 MJ/L (assumed) | combustion |
+| Meals (DE): beef, pork, poultry, fish, vegetarian, vegan | 1.86 / 0.96 / 1.05 / 1.01 / 0.935 / 0.60 | ifeu 2020 Tab. 2 and 3: 13.6 / 4.6 / 5.5 / 5.1 (aquaculture) / 4.35 (50/50 egg and cheese, assumed) / 1.0 (tofu) kg/kg | cradle to checkout |
+| Waste: landfill, incineration, recycling, compost | 0.497 / 0.00469 / 0.00469 / 0.00898 per kg | DESNZ 2025 waste disposal | disposal only, cut-off |
+| Smartphone | 55 per item | Apple iPhone 17 PER (09/2025), 256 GB | life cycle; one model only |
+
+Meals use $EF_{meal} = 0.100\,\text{kg} \times EF_{food} + 0.5\,\text{kg}$.
+
+**Scope change for transport.** UBA TREMOD gives only well-to-wheel values, so German transport lines now *include* the energy supply chain, unlike the §6 exclusion that still applies to the global lines and to heating fuels. The mix is deliberate: the UBA table publishes no split by scope, and its values are the official German reference.
+
+**ifeu vs Poore & Nemecek.** The ifeu German beef value (13.6 kg/kg) is far below the global mean from Poore & Nemecek (99.48 kg/kg, which includes land-use change on a global herd). As a result, the German beef meal falls from 10.45 to 1.86 kg. Global users keep the Poore-based lines.
+
+### V10 additions (2026-11-09)
+
+| Line | kg CO2e / unit | Source | Scope |
+|---|---|---|---|
+| Motorbike | 0.114 per km | DESNZ 2025, Motorbike average (ID 4_302_3080_4_1) | tank-to-wheel, 1 rider; UK proxy |
+| Long-haul flight | 0.153 per pkm | DESNZ 2025, long-haul average passenger with RF (ID 21_316_3168_11_1) | incl. radiative forcing, no WTT; UK proxy |
+| District heating (DE) | 0.280 per kWh | BAFA Infoblatt CO2-Faktoren v3.1 (08/2024), Tabelle 2 | generic default, CO2; local networks vary |
+| Electricity (global) | 0.473 per kWh | Ember yearly data, World 2024 | life-cycle CO2e of generation |
+| Lamb meal | 4.472 | Poore & Nemecek 2018 via OWID: 39.72 kg/kg | global farm-to-retail |
+| Laptop | 253 per item | Dell Latitude 5440 PCF: 290 life cycle − 37.7 use phase | use phase excluded, since electricity is logged separately |
+
+**Scope caveat.** Domestic flights use the UBA value (EWF 1.5, including upstream) and long-haul flights use DESNZ (RF 1.7, without WTT). The two are not on exactly the same basis.
+
+**Still unverified (V2 seed values, marked "indicative"):** jeans 33.4 (the Levi's 2015 LCA PDF could not be reached), T-shirt 7 (only a cotton-shirt LCA was found, 8.77 kg), and other goods 0.4 per EUR (no primary German spend-based factor was found).

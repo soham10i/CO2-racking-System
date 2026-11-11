@@ -51,6 +51,27 @@
 - [ ] Security headers score A on a header scanner
 - [ ] Dependency and image scans clean of high/critical
 
+### A5. Security review, 2026-11-09
+
+Probed against the running stack (nginx → API → Postgres) after adding Google sign-in.
+
+| Area | Finding | Status |
+|---|---|---|
+| HTTP headers | nginx drops server-level `add_header` in any `location` with its own, so HTML pages were served **without** `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy`, and static files without any | Fixed: one `security-headers.conf` included in every location; added HSTS, COOP, CORP, `object-src 'none'`; `server_tokens off` |
+| Brute force / spam | Only a per-account lockout; sign-up, reset mail and login had no per-IP budget | Fixed: nginx `limit_req`, 30/min (burst 40) per IP on sign-in-style endpoints (verify-email excluded: 256-bit tokens), 30/s on the rest; 429 when over. Verified: 45 rapid logins → 9 refused |
+| Client IP behind Caddy | nginx would have seen Caddy's address for everyone, so one budget for all users | Fixed: `real_ip` from `X-Forwarded-For`, trusting private hops only |
+| API docs | `/api/v1/docs` (full OpenAPI map) public | Off unless `API_DOCS_ENABLED=true` |
+| Actuator | Only `health`/`info` exposed | Also blocked at nginx (404 from outside) |
+| SSO account takeover | Pre-registered unconfirmed account could keep its password after the owner signs in with Google | Prevented and tested (`GoogleSignInTest`) |
+| Forged tokens | `alg: none` JWT to an admin route, forged Google token | 401 for both |
+| Injection | SQL meta-characters in login | 401; all queries are JPA/parameterised |
+| Ownership (IDOR) | Every user-data lookup is scoped by the signed-in user id; the one unscoped lookup is the internal template job | OK |
+| Dependencies | KaTeX advisories (attribute names, prototype pollution) | Fixed: KaTeX 0.18.2 |
+| Dependencies | `react-router-dom` 6 (open redirect via `<Link>` backslash, SSR hydration); `zod` 3 (memory on huge collections) | **Open**: need major upgrades (router 7, zod 4). Low exposure here (no SSR; redirects use app-set state; zod runs only in the browser on form input) |
+
+Not covered by this review: TLS settings (Caddy defaults), host firewall, and a third-party penetration
+test. No review can promise that nobody can get in; it can only remove known paths.
+
 ## Part B — Visual and UX design
 
 ### B1. Principles

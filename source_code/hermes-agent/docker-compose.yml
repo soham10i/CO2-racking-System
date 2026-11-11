@@ -1,0 +1,19 @@
+# Local dev. `make run-local` picks the real Mercury API if MERCURY_API_KEY is set in .env,
+# otherwise it layers docker-compose.mock.yml on top to use the mock.
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: hermes-mercury-agent:local
+    env_file: .env
+    environment:
+      PORT: "8642"
+    ports:
+      - "127.0.0.1:8642:8642"   # loopback only; this is an agent with tools, don't expose it
+    volumes:
+      - hermes-data:/opt/data    # sessions / memory persist across restarts locally
+    restart: unless-stopped
+
+volumes:
+  hermes-data:

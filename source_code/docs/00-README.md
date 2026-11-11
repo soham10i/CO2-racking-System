@@ -8,7 +8,9 @@
 | [04-security-and-ux.md](04-security-and-ux.md) | Threat model, controls, release checklist; visual/UX design system |
 | [05-emission-methodology.md](05-emission-methodology.md) | Calculation math, factor derivations, aggregation formulas, uncertainty, references |
 | [06-integrations-sso-email.md](06-integrations-sso-email.md) | What is needed to enable real email delivery, notifications and SSO (SSO deferred) |
-| [07-deploy-oracle-cloud.md](07-deploy-oracle-cloud.md) | Hosting on Oracle Cloud Always Free: VM + Postgres, HTTPS, Object Storage backups, Email Delivery |
+| [10-co2-recommender-evidence.md](10-co2-recommender-evidence.md) | Fact-checked research on the biggest CO2 levers, grid timing, behaviour change and recommender design, with references |
+| [11-daily-plan-and-calculator-design.md](11-daily-plan-and-calculator-design.md) | Built: CO2 calculator (compare alternatives, yearly footprint) and the daily-plan recommender (API contract, catalog, ranking formula) |
+| [09-platform-roadmap.md](09-platform-roadmap.md) | Next: LLM assistant, wearable and automatic data entry, cross-platform mobile/tablet/web apps on the same API, CI/CD pipeline and sprint plan |
 
 ## Decisions I made (change any of these)
 1. **React + TypeScript** (over Angular), Vite, TanStack Query, Tailwind.
@@ -16,7 +18,7 @@
 3. **PostgreSQL + Flyway** (MySQL lab constraint no longer applies).
 4. **Java 21**, Spring Boot 3.x, modular monolith.
 5. Launch region Germany/EU, English UI, rule-based (not ML) recommendations.
-6. Seed emission factors are placeholders; they must be verified against public sources before release.
+6. Emission factors: V9 (2026-11-09) replaced most seed values with verified UBA TREMOD 2024, UBA Strommix 2025, ifeu 2020, DESNZ 2025 and Apple PER values (see [05 §10](05-emission-methodology.md)). V10 added DESNZ 2025, BAFA, Ember and Dell values. Still unverified: jeans, T-shirt, other goods per EUR.
 
 ## Open questions for you
 1. Is this a course/portfolio project or a product for real users? (changes GDPR, hosting and 2FA depth)

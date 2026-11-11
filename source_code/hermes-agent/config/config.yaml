@@ -1,0 +1,7 @@
+# Hermes Agent config. Hermes expands ${VAR} from the environment.
+# Mercury (Inception Labs) is OpenAI-compatible, so it is wired up as a `custom` provider.
+model:
+  provider: custom
+  base_url: ${MERCURY_BASE_URL}   # default https://api.inceptionlabs.ai/v1
+  default: ${MERCURY_MODEL}       # e.g. mercury-2 (check GET /v1/models)
+  api_key: ${MERCURY_API_KEY}     # never hard-code; injected from .env / Secret Manager

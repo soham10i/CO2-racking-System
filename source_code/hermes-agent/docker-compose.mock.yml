@@ -1,0 +1,13 @@
+services:
+  mock-mercury:
+    image: python:3.13-slim-trixie
+    command: ["python", "/app/mock_mercury.py"]
+    volumes:
+      - ./mock:/app:ro
+    environment:
+      MOCK_EXPECTED_KEY: mock-key
+  agent:
+    depends_on: [mock-mercury]
+    environment:
+      MERCURY_API_KEY: mock-key
+      MERCURY_BASE_URL: http://mock-mercury:8000/v1

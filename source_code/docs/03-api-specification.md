@@ -30,7 +30,7 @@ Base path `/api/v1` · JSON (`application/json`) · errors `application/problem+
 | PUT `/me/profile` | U/A | Replace lifestyle profile (see schema below) |
 | PATCH `/me/preferences` | U/A | Units, timezone, digest |
 | POST `/me/email-change` | U/A | `{newEmail, password}` → 202, verification sent |
-| GET `/me/export` | U/A | Async job → `202` + `Location`; download JSON/CSV zip |
+| GET `/me/export` | U/A | JSON download (`Content-Disposition: attachment`): account, budget, baseline answers, all activities, templates and action decisions. Format `co2-tracker-export/1` |
 | DELETE `/me` | U/A | `{password}` → 204; erases account and data |
 
 Profile schema:
@@ -53,8 +53,8 @@ Profile schema:
 | PUT `/activities/{id}` | U | Replace (`If-Match` ETag) |
 | DELETE `/activities/{id}` | U | 204 |
 | POST `/activities/bulk-delete` | U | `{ids:[…]}` |
-| POST `/activities/import` | U | multipart CSV; `?dryRun=true` returns preview + row errors |
-| GET `/activities/export` | U | CSV |
+| POST `/activities/import` | U | JSON `{csv, dryRun}` (≤ 1 MB, ≤ 5000 rows). Columns matched by header; `date, category, subtype, quantity` required. Every row is checked like the log form; rows matching an existing entry (date, type, amount) are `DUPLICATE` and skipped. Returns counts and per-row `READY\|DUPLICATE\|ERROR\|IMPORTED`. 422 `csv_empty`, `csv_too_large`, `csv_missing_column` |
+| GET `/activities/export` | U | CSV (`date, category, subtype, label, quantity, unit, passengers, kg_co2e, factor_source, note`); text starting with `= + - @` is prefixed with `'` against spreadsheet formula injection. The file re-imports as is |
 | GET/POST `/recurring-activities`, PUT/DELETE `/recurring-activities/{id}` | U | Recurring rules |
 
 Create request (server computes the result):
@@ -104,14 +104,50 @@ Response `201`:
 
 Recurring templates are booked by an hourly job (catch-up at most 31 days). The weekly digest is sent on the user's local Monday from 08:00 when `digestOptIn` is set.
 
-*Planned:* `/suggestions` lifecycle (dismiss/snooze/adopt) and in-app `/notifications`.
+## Suggestion lifecycle (Phase 5)
+| Method & path | Access | Description |
+|---|---|---|
+| PUT `/insights/actions/{key}/decision` | U | `{status: ADOPTED\|DISMISSED\|SNOOZED, snoozeDays?}` (snooze 1–365, default 30). Adopting stores the expected saving and the current rate; 422 `action_not_applicable` if the action no longer applies. 404 for an unknown key |
+| DELETE `/insights/actions/{key}/decision` | U | Undo: the action returns to the suggestions |
+
+Both return the same body as `GET /insights/actions`: `{windowDays, from, to, actions, commitments, hidden}`. A commitment carries `expectedAnnualKg`, and `realisedAnnualKg` once 7 days have passed (omitted before; see methodology §4.8). Hidden lists dismissed and still-snoozed actions so they can be restored.
+
+## Notifications (Phase 6)
+| Method & path | Access | Description |
+|---|---|---|
+| GET `/notifications` | U | Newest first, with the unread count |
+| POST `/notifications/{id}/read` · POST `/notifications/read-all` | U | Mark as read (204) |
+| GET · PUT `/notifications/settings` | U | `{budget, templates, digest}` switches (PUT fields are optional); the response adds `pushAvailable`, `vapidPublicKey` and `pushDevices`. Kinds: `BUDGET_AT_RISK`, `BUDGET_OVER`, `WEEKLY_DIGEST`, `TEMPLATE_BOOKED`, `HOUSEHOLD` |
+| POST · DELETE `/notifications/push-subscriptions` | U | Store or remove this browser's push subscription; the endpoint host must be a known push service |
+
+## Electricity, location and market based (Phase 6)
+| Method & path | Access | Description |
+|---|---|---|
+| GET `/insights/scope2?from&to` | U | Defaults to this calendar year up to today. `{from, to, kwh, locationKg, locationGPerKwh?, supplierGPerKwh?, marketKg?}`; fields left out when unknown |
+| PUT `/insights/scope2/supplier` | U | `{gramsPerKwh: 0–2000 \| null}`; null clears it |
+
+## Household (Phase 6)
+| Method & path | Access | Description |
+|---|---|---|
+| GET `/household` | U | `{id, name, members[], ...}`, or 204 if not in one |
+| POST `/household` · PATCH `/household` | U | Create `{name}` (409 if already in one) · rename (owner) |
+| POST `/household/invites` | U | Single-use code, valid 7 days; 422 `household_full` at 10 members |
+| POST `/household/join` | U | `{code}`, case and dashes ignored |
+| POST `/household/leave` | U | 204; shared entries stay in everyone's log |
+
+`POST /activities` takes `shareWithHousehold: true` for ENERGY and WASTE (422 `share_not_applicable`, `no_household`, `quantity_too_small`). Every member's copy carries `share: {count, totalQuantity, editable}`. Only the creator may PUT or DELETE (403 `shared_read_only`), and changes apply to every copy.
+
+## Meter import (Phase 6)
+POST `/activities/import/meter` `{csv (≤ 1 MB), subtype: ELECTRICITY | NATURAL_GAS | DISTRICT_HEATING, dryRun}` returns the same body as `/activities/import`. 422 `meter_format` (no date column, no kWh column, m³ data), `invalid_subtype`, `csv_too_large` (> 5000 days).
 
 ## Administration (ADMIN only)
 | Method & path | Description |
 |---|---|
 | GET `/admin/users`, GET `/admin/users/{id}` | Search/filter; no activity data |
 | PATCH `/admin/users/{id}` | `{status?, role?}` |
-| GET/POST `/admin/emission-factors`; PUT `/admin/emission-factors/{id}` creates a new version | |
+| GET `/admin/factors` | Every factor version, newest first within each line, with `current` |
+| POST `/admin/factors/{id}/preview` | `{kgCo2ePerUnit, validFrom, sourceName, sourceUrl (https), methodNote?}` → old and new value, `changePercent`, `nextVersion`, `entriesFromValidFrom` |
+| POST `/admin/factors/{id}/versions` | Publishes (201). 422 `not_current` if `{id}` is already closed, `invalid_valid_from` unless after the current start and ≤ 366 days ahead. Admin role comes from `APP_ADMIN_EMAILS` at sign-in |
 | GET/POST/PUT `/admin/recommendation-rules` | |
 | GET `/admin/audit-log` | Filter by actor/action/date |
 

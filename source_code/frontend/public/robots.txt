@@ -1,0 +1,4 @@
+# The app is private behind sign-in; only the public pages are worth indexing.
+User-agent: *
+Disallow: /api/
+Allow: /

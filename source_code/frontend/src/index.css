@@ -1,0 +1,527 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Theme "Zero": lime #0FFF4F, black #000000, grey #999999, off-white #F2F2F2.
+ * Light: black ink and black primary buttons with lime text on off-white; lime marks highlights only.
+ * Dark: off-white ink on true black; lime is the primary colour and the link colour.
+ * Contrast (checked): light ink 18.8:1, muted 6.3:1, links 6.9:1, lime on black 17.9:1;
+ * dark ink 16.5:1, muted 6.5:1 (5.8:1 on raised), lime 15.7:1. Field outlines >= 3.4:1.
+ */
+:root {
+  color-scheme: light;
+  --bg: #f2f2f2;
+  --surface-solid: #ffffff;
+  --surface-raised: #fafafa;
+  --glass: rgba(255, 255, 255, 0.92);
+  --glass-strong: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(0, 0, 0, 0.07);
+  --glass-highlight: rgba(255, 255, 255, 1);
+  --glass-shadow: rgba(0, 0, 0, 0.06);
+  --line: rgba(0, 0, 0, 0.08);
+  --field: #8c8c8c; /* input outline, 3.4:1 on white */
+  --fill: rgba(0, 0, 0, 0.045);
+  --fill-strong: rgba(0, 0, 0, 0.085);
+  --ink: #000000;
+  --muted: #595959;
+  --brand: #0FFF4F; /* lime: fills, rings and highlights only, never text on light */
+  --brand-ink: #000000;
+  --primary: #000000;
+  --primary-ink: #0FFF4F;
+  --accent: var(--accent-light, #3d5c00);
+  --warn: #a34a00;
+  --danger: #c4000f;
+  --danger-ink: #ffffff;
+  --ring: rgba(61, 92, 0, 0.35);
+  --wallpaper:
+    radial-gradient(62rem 44rem at 92% -10%, rgba(15, 255, 79, 0.5), transparent 62%),
+    radial-gradient(40rem 32rem at 8% 0%, rgba(15, 255, 79, 0.16), transparent 60%),
+    radial-gradient(52rem 42rem at -4% 108%, rgba(153, 153, 153, 0.32), transparent 62%),
+    radial-gradient(36rem 30rem at 70% 70%, rgba(15, 255, 79, 0.1), transparent 60%),
+    linear-gradient(180deg, #f8f8f8 0%, #f2f2f2 48%, #e8e8e8 100%);
+  /* Calendar heatmap: one lime ramp, light to dark. */
+  --heat-1: #ebff99;
+  --heat-2: #0FFF4F;
+  --heat-3: #8fb300;
+  --heat-4: #4d6100;
+  /* Categorical chart slots, fixed order; every chart also ships a legend and a table view. */
+  --cat-transport: #2a78d6;
+  --cat-energy: #eb6834;
+  --cat-diet: #1baf7a;
+  --cat-shopping: #eda100;
+  --cat-waste: #e87ba4;
+  --chart-grid: #e6e6e6;
+  --chart-neutral: #999999;
+}
+
+/* Dark tokens apply when the user picks Dark, or picks System (no data-theme) and the OS is dark.
+   Both selectors carry the same values; keep them in sync. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface-solid: #141414;
+  --surface-raised: #1f1f1f;
+  --glass: rgba(20, 20, 20, 0.9);
+  --glass-strong: rgba(31, 31, 31, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --glass-shadow: rgba(0, 0, 0, 0.6);
+  --line: rgba(255, 255, 255, 0.09);
+  --field: #6e6e6e;
+  --fill: rgba(255, 255, 255, 0.06);
+  --fill-strong: rgba(255, 255, 255, 0.11);
+  --ink: #f2f2f2;
+  --muted: #999999;
+  --brand: #0FFF4F;
+  --brand-ink: #000000;
+  --primary: #0FFF4F;
+  --primary-ink: #000000;
+  --accent: var(--accent-dark, #0FFF4F);
+  --warn: #ffb340;
+  --danger: #ff6961;
+  --danger-ink: #2b0003;
+  --ring: rgba(15, 255, 79, 0.35);
+  --wallpaper:
+    radial-gradient(62rem 44rem at 92% -10%, rgba(15, 255, 79, 0.17), transparent 62%),
+    radial-gradient(40rem 32rem at 8% 0%, rgba(15, 255, 79, 0.05), transparent 60%),
+    radial-gradient(52rem 42rem at -4% 108%, rgba(153, 153, 153, 0.15), transparent 62%),
+    radial-gradient(36rem 30rem at 70% 70%, rgba(15, 255, 79, 0.06), transparent 60%),
+    linear-gradient(180deg, #0b0b0b 0%, #000000 55%, #050505 100%);
+  --heat-1: #3d4d00;
+  --heat-2: #7a9900;
+  --heat-3: #b3e000;
+  --heat-4: #e0ff66;
+  --cat-transport: #3987e5;
+  --cat-energy: #d95926;
+  --cat-diet: #199e70;
+  --cat-shopping: #c98500;
+  --cat-waste: #d55181;
+  --chart-grid: #262626;
+  --chart-neutral: #999999;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #000000;
+    --surface-solid: #141414;
+    --surface-raised: #1f1f1f;
+    --glass: rgba(20, 20, 20, 0.9);
+    --glass-strong: rgba(31, 31, 31, 0.94);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-highlight: rgba(255, 255, 255, 0.06);
+    --glass-shadow: rgba(0, 0, 0, 0.6);
+    --line: rgba(255, 255, 255, 0.09);
+    --field: #6e6e6e;
+    --fill: rgba(255, 255, 255, 0.06);
+    --fill-strong: rgba(255, 255, 255, 0.11);
+    --ink: #f2f2f2;
+    --muted: #999999;
+    --brand: #0FFF4F;
+    --brand-ink: #000000;
+    --primary: #0FFF4F;
+    --primary-ink: #000000;
+    --accent: var(--accent-dark, #0FFF4F);
+    --warn: #ffb340;
+    --danger: #ff6961;
+    --danger-ink: #2b0003;
+    --ring: rgba(15, 255, 79, 0.35);
+    --wallpaper:
+      radial-gradient(62rem 44rem at 92% -10%, rgba(15, 255, 79, 0.17), transparent 62%),
+      radial-gradient(40rem 32rem at 8% 0%, rgba(15, 255, 79, 0.05), transparent 60%),
+      radial-gradient(52rem 42rem at -4% 108%, rgba(153, 153, 153, 0.15), transparent 62%),
+      radial-gradient(36rem 30rem at 70% 70%, rgba(15, 255, 79, 0.06), transparent 60%),
+      linear-gradient(180deg, #0b0b0b 0%, #000000 55%, #050505 100%);
+    --heat-1: #3d4d00;
+    --heat-2: #7a9900;
+    --heat-3: #b3e000;
+    --heat-4: #e0ff66;
+    --cat-transport: #3987e5;
+    --cat-energy: #d95926;
+    --cat-diet: #199e70;
+    --cat-shopping: #c98500;
+    --cat-waste: #d55181;
+    --chart-grid: #262626;
+    --chart-neutral: #999999;
+}
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  @apply font-sans text-ink antialiased;
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'kern', 'ss01', 'cv11';
+}
+
+@layer components {
+  /* Surfaces. The class names are kept from the glass era; they now mean "card" and "pill". */
+  .glass,
+  .glass-liquid {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      0 1px 2px var(--glass-shadow),
+      0 12px 32px -12px var(--glass-shadow);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: blur(20px) saturate(140%);
+  }
+  .glass-strong {
+    @apply glass;
+    background: var(--glass-strong);
+  }
+
+  /* Secondary button / pill: quiet fill, lime edge on hover. */
+  .liquid-capsule {
+    background: var(--fill);
+    border: 1px solid var(--line);
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  }
+  .liquid-capsule:hover {
+    background: var(--fill-strong);
+    border-color: var(--brand);
+  }
+  .liquid-capsule:active {
+    transform: translateY(0.5px);
+  }
+
+  /* Display type for headings and big numbers. */
+  .font-display {
+    font-family: 'Space Grotesk Variable', 'Inter Variable', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  /* A lime marker behind a word or number. */
+  .brand-chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  /* Segmented control (UISegmentedControl / NSSegmentedControl). */
+  .segmented {
+    @apply inline-flex rounded-[10px] p-0.5;
+    background: var(--fill);
+  }
+  .segment {
+    @apply min-h-[32px] rounded-[8px] px-3 text-xs font-semibold text-muted transition;
+  }
+  .segment:hover {
+    @apply text-ink;
+  }
+  .segment[aria-pressed='true'] {
+    background: var(--primary);
+    color: var(--primary-ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+  }
+}
+
+/* Toast entrance; the global reduced-motion rule below shortens it to nothing. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+.toast-in {
+  animation: toast-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Quick-log dialog: silky blur behind, enters with smooth fluid spring. */
+.command-bar::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+.command-bar[open] {
+  animation: modal-pop 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Skeleton shimmer: a placeholder block in the shape of the content that is loading. */
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+.skeleton {
+  background: var(--fill-strong);
+  border-radius: 8px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+/* Accent choices (Settings): each pair keeps link text ≥ 4.5:1 on its theme's surfaces. */
+:root[data-accent='indigo'] {
+  --accent-light: #4b44c8;
+  --accent-dark: #8e8aff;
+}
+:root[data-accent='teal'] {
+  --accent-light: #00787a;
+  --accent-dark: #40c8e0;
+}
+:root[data-accent='pink'] {
+  --accent-light: #c4006a;
+  --accent-dark: #ff6aa8;
+}
+
+/* The in-app "Reduce transparency" switch mirrors the OS setting below. */
+:root[data-transparency='reduced'] .glass,
+:root[data-transparency='reduced'] .glass-strong {
+  background: var(--surface-solid);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-transparency='reduced'] body::before {
+  display: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-strong {
+    background: var(--surface-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .glass,
+  .glass-strong {
+    border: 1px solid CanvasText;
+  }
+}
+
+:focus-visible:not(input):not(textarea):not(select):not(.no-focus-outline) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+.heat-0 {
+  fill: var(--fill-strong);
+}
+.heat-1 {
+  fill: var(--heat-1);
+}
+.heat-2 {
+  fill: var(--heat-2);
+}
+.heat-3 {
+  fill: var(--heat-3);
+}
+.heat-4 {
+  fill: var(--heat-4);
+}
+
+/* Living wallpaper: a soft glow that follows this month's budget status (the card says it in words too).
+   It drifts slowly and is left out entirely for reduced motion or reduced transparency. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--budget-glow, none);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  animation: wallpaper-drift 28s ease-in-out infinite alternate;
+}
+html[data-budget] body::before {
+  opacity: 1;
+}
+html[data-budget='ON_TRACK'] {
+  --budget-glow: radial-gradient(56rem 36rem at 50% -8%, rgba(52, 199, 89, 0.16), transparent 62%);
+}
+html[data-budget='AT_RISK'] {
+  --budget-glow: radial-gradient(56rem 36rem at 50% -8%, rgba(255, 159, 10, 0.2), transparent 62%);
+}
+html[data-budget='OVER'] {
+  --budget-glow: radial-gradient(56rem 36rem at 50% -8%, rgba(255, 59, 48, 0.18), transparent 62%);
+}
+@keyframes wallpaper-drift {
+  to {
+    transform: translate3d(3%, 2%, 0) scale(1.04);
+  }
+}
+@media (prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce) {
+  body::before {
+    display: none;
+  }
+}
+
+/* iOS-style switch on a native checkbox (keeps keyboard and screen-reader behaviour). */
+.switch {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 51px;
+  height: 31px;
+  border-radius: 999px;
+  background: var(--fill-strong);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+.switch:checked {
+  background: var(--primary);
+}
+.switch:checked::after {
+  transform: translateX(20px);
+}
+.switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Bars grow from their baseline on first draw. */
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.bar-grow {
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: bar-grow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Page changes cross-fade with a slight rise (View Transitions; browsers without it just switch). */
+::view-transition-old(root) {
+  animation: vt-out 0.16s ease-in both;
+}
+::view-transition-new(root) {
+  animation: vt-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* On phones the quick-log bar is a bottom sheet, within thumb reach and above the keyboard. */
+@media (max-width: 767px) {
+  .command-bar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .command-bar[open] {
+    animation: sheet-up 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* Year in review: one story card per swipe, no visible scrollbar (the buttons and counter carry position). */
+.story-track {
+  scrollbar-width: none;
+}
+.story-track::-webkit-scrollbar {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .story-track {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ---- Background gradient + motion ---------------------------------------------------------------
+   The palette gradient lives on a fixed layer that drifts very slowly (transform only, GPU cheap). */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -12%;
+  z-index: -2;
+  pointer-events: none;
+  background: var(--wallpaper);
+  transition: background 0.4s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  body::after {
+    animation: gradient-drift 40s ease-in-out infinite alternate;
+  }
+}
+@keyframes gradient-drift {
+  50% {
+    transform: translate3d(-3%, 2%, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(2%, -2%, 0) scale(1.02);
+  }
+}
+:root[data-transparency='reduced'] body::after {
+  background: none;
+}
+
+/* Cards rise into place as they scroll into view. Transform only (never opacity), so text keeps full
+   contrast at every moment; browsers without scroll-driven animations simply show them in place. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    main .glass-liquid {
+      animation: card-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+@keyframes card-rise {
+  from {
+    transform: translateY(28px) scale(0.985);
+  }
+}
+
+/* Interactive cards and pills ease rather than snap. */
+.glass-liquid,
+.liquid-capsule,
+a,
+button {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
